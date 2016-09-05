@@ -27,7 +27,7 @@ class Simulation {
     void preconfigure_vending_machine();
 
 public:
-    Simulation() : debug(true) {};
+    Simulation() : debug(false) {};
     void set_localization(string local);
     ~Simulation() {
         delete menu;

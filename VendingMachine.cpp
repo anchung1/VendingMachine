@@ -20,7 +20,7 @@ VendingMachine::~VendingMachine() {
 
 void VendingMachine::stock_coins(int quantity) {
     coins->stockCoins(quantity);
-    coins->showCoins();
+    //coins->showCoins();
 }
 
 void VendingMachine::stock_items() {

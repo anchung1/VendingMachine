@@ -47,12 +47,8 @@ public:
 class MenuUS: public Menu {
 
 public:
-    MenuUS() : Menu() {
-        cout << "US Menu" << endl;
-    }
-    ~MenuUS() {
-        cout << "US Menu remove" << endl;
-    }
+    MenuUS() : Menu() {};
+    ~MenuUS() {};
 
     void show_coin_menu();
     bool do_action(string select);
@@ -62,12 +58,9 @@ public:
 
 class MenuUK: public Menu {
 public:
-    MenuUK() : Menu() {
-        cout << "UK Menu" << endl;
-    }
-    ~MenuUK() {
-        cout << "UK Menu remove" << endl;
-    }
+    MenuUK() : Menu() {};
+    ~MenuUK() {};
+
     void show_coin_menu();
     bool do_action(string select);
 };
