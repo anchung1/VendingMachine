@@ -18,6 +18,7 @@ class Simulation {
     VendingMachine *vendingMachine;
 
     string locale;
+    string coin_unit;
     bool debug;
 
     void process_input_queue();

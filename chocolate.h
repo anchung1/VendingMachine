@@ -11,18 +11,32 @@
 
 using namespace std;
 
-class Chocolate {
+typedef struct choc_ {
+    string keyID;  //can be used to decode location
     string name;
-    float cost;
+    int cost;  //unit in cents
+    int quantity;
 
+}Chocolate;
+
+class VendChocolates {
+    vector<Chocolate> items;
+
+    vector<Chocolate>::iterator find_item(string id);
 public:
-    Chocolate(string name, float cost): name(name), cost(cost){};
-    bool is_name(string name) { return this->name.compare(name) == 0; }
-    string get_name() {return name;}
-    float get_cost() {return cost;}
-    string to_string() {return name + " costs " + std::to_string(cost); }
-};
+    VendChocolates() {};
+    void stockAllItems(int quantity=10);
+    void removeAllItems();
 
-extern Chocolate* get_chocolate_data(string name);
+    void addQuantity(string id, int quantity);
+    void removeQuantity(string id, int quantity);
+
+    void addNewItem(Chocolate &ch);
+    void removeItem(string id);
+
+    Chocolate* get_info(string id);
+    const vector<Chocolate>& get_data();
+    void report();
+};
 
 #endif //VENDME_CHOCOLATE_H

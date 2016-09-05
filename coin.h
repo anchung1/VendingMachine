@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include "events.h"
 using namespace std;
 
@@ -43,6 +44,8 @@ public:
 
     bool has_fat_coin();
     int get_fat_coin_value() {return fat_coin_value;}
+    list<int> make_change(int amount);
+    const vector<coin>& get_data();
 };
 
 class CoinsUS : public Coins {
@@ -63,6 +66,6 @@ public:
     }
 };
 
-extern int get_denomination(string locale);
 extern Coins* get_coins(string locale);
+extern void clean_up_coins();
 #endif //VENDME_COIN_H

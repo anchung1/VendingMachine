@@ -9,16 +9,20 @@
 using namespace std;
 
 enum VendingEvent { noEvent, refundMenuEvent,
-    coinEvent, creditEvent, billEvent, ejectCoinEvent,
-    quitMenuEvent
+    coinEvent, creditEvent, billEvent, ejectCoinEvent, showFundsEvent,
+    itemSelectEvent, itemDispenseEvent,itemDataRequestEvent, itemDataReportEvent,
+    sendCurrencyReport, sendItemsReport, quitMenuEvent
 };
 
 
 typedef struct EventData_ {
     VendingEvent type;
     int data;
+    int data2;
+    string s_data1;
+    string s_data2;
 } EventData;
 
-extern string translate_event(EventData ev);
+extern string translate_event(EventData& ev);
 
 #endif //VENDME_EVENTS_H

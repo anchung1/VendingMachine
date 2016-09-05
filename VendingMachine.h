@@ -9,17 +9,12 @@
 #include <string>
 #include <queue>
 #include <stack>
+
 #include "events.h"
 #include "coin.h"
+#include "chocolate.h"
 
 using namespace std;
-
-class Item {
-    string name;
-    float cost;
-public:
-    Item() {};
-};
 
 class VendingMachine {
 
@@ -32,23 +27,30 @@ class VendingMachine {
     int cash_fund;
     stack<int> coins_in;
 
+    VendChocolates *chocolates;
+
     queue<EventData> event_queue;
+    void queue_event(VendingEvent ev, int data=0, int data1=0, string s_data1="", string s_data2="");
+
+    void increment_cash_fund(int sum);
+    void eject_change(list<int>& change);
     bool debug;
 
 public:
     VendingMachine(string locale);
+    ~VendingMachine();
 
     //preconfigure before simulation
     void stock_items();
     void stock_coins(int quantity=10);
 
-    //debug
+    //debug and simulation only
     void showCoins();
+    int get_money_in();
 
     //API to check machine state
     bool accepting_bill(); //dollar coin needed for refund
     bool accepting_coins();
-    bool exact_change_required();
 
     //API to receive funds
     bool insert_credit(int amount); //unit of cent
@@ -62,14 +64,16 @@ public:
 
     //API to select an item
     bool select_item(int row, int col) {return true;} //some devices may opt for row/col selection
-    bool select_item(string id); //row/col may be combined as an id
+    void select_item(string id); //row/col may be combined as an id
 
     //API to dispense item
-    bool dispense_item(int row, int col);
+    void dispense_item(string id);
 
     //inventory API to track state of machine
-    bool send_currency_report(); //coins + bills reporting
-    bool send_items_report(); //item name/count reporting
+    void get_item_data();
+
+    void send_currency_report(); //coins + bills reporting
+    void send_items_report(); //item name/count reporting
 
     //API for serviceman for adding/removing items,coins,bills?
 

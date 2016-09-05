@@ -3,6 +3,7 @@
 //
 
 #include "menu.h"
+bool debug = true;
 
 void Menu::show_main_menu() {
     valid_actions.clear();
@@ -12,12 +13,28 @@ void Menu::show_main_menu() {
     cout << "b) Select Item" << endl;
     cout << "c) Refund" << endl;
     cout << "d) Quit" << endl;
+    if (debug) {
+        cout << "e) send_currency_report (debug)" << endl;
+        cout << "f) send_items_report (debug)" << endl;
+    }
     cout << "Enter 'a', 'b', 'c' or 'd': " << endl;
 
-    add_valid_action('a');
-    add_valid_action('b');
-    add_valid_action('c');
-    add_valid_action('d');
+    add_valid_action("a");
+    add_valid_action("b");
+    add_valid_action("c");
+    add_valid_action("d");
+    if (debug) {
+        add_valid_action("e");
+        add_valid_action("f");
+    }
+}
+
+void Menu::show_item_menu() {
+    //need to send out a message to vending machine
+    //to show its inventory
+
+    valid_actions.clear();
+    add_valid_action("all");
 }
 
 void Menu::show_menu() {
@@ -36,14 +53,29 @@ void Menu::show_menu() {
 
 }
 
-void Menu::add_valid_action(char input) {
-    valid_actions.push_back(input);
-    valid_actions.push_back((char)toupper(input));
+void Menu::add_valid_action(string input) {
+    string lower = input;
+
+    for (int i=0; i<lower.size(); i++) {
+        lower[i] = (char)tolower(lower[i]);
+    }
+
+    //just support lower case
+    valid_actions.push_back(lower);
 }
 
 void Menu::get_menu_selection() {
-    char selection;
+    string selection;
+
+    if (menuState == selectItem) {
+        cout << "Please select code after #: " << endl;
+    }
     cin >> selection;
+
+    //convert user input to lower case
+    for (int i=0; i<selection.size(); i++) {
+        selection[i] = (char)tolower(selection[i]);
+    }
 
     bool valid = check_valid_input(selection);
     if (!valid) {
@@ -56,35 +88,43 @@ void Menu::get_menu_selection() {
     }
 }
 
-bool Menu::do_action(char select) {
+bool Menu::do_action(string select) {
     bool ret_val = false;
 
     if (menuState == mainMenu) {
         ret_val = true;
-        switch (select) {
-            case 'a':
-                menuState = addCoin;
-                break;
-            case 'b':
-                menuState = selectItem;
-                break;
-            case 'c':
-                queue_event(refundMenuEvent, 0);
-                break;
-            case 'd':
-                queue_event(quitMenuEvent, 0);
-                break;
-            default:
-                break;
+
+        if (select == "a") {
+            menuState = addCoin;
+        }
+        if (select == "b") {
+            menuState = selectItem;
+            queue_event(itemDataRequestEvent);
+        }
+        if (select == "c") {
+            queue_event(refundMenuEvent);
+        }
+        if (select == "d") {
+            queue_event(quitMenuEvent);
+        }
+        if (select == "e") {
+            queue_event(sendCurrencyReport);
+        }
+        if (select == "f") {
+            queue_event(sendItemsReport);
         }
     }
 
     return ret_val;
 }
 
-bool Menu::check_valid_input(char selection) {
-    vector<char>::iterator it;
+bool Menu::check_valid_input(string selection) {
+    list<string>::iterator it;
     bool found = false;
+
+    if (valid_actions.front() == "all") {
+        return true;
+    }
 
     for( it=valid_actions.begin(); it != valid_actions.end(); it++) {
         if (selection == *it) {
@@ -96,14 +136,13 @@ bool Menu::check_valid_input(char selection) {
     return found;
 }
 
-void Menu::queue_event(VendingEvent ev, int data) {
-
-    event_queue.push({ev, data});
+void Menu::queue_event(VendingEvent ev, int data, int data1, string s_data1, string s_data2) {
+    event_queue.push({ev, data, data1, s_data1, s_data2});
 }
 
 EventData Menu::get_menu_event() {
     if (event_queue.empty()) {
-        return {noEvent, 0};
+        return {noEvent, 0, 0, "", ""};
     }
 
     EventData front = event_queue.front();
@@ -121,43 +160,53 @@ void MenuUS::show_coin_menu() {
     cout << "d) Dollar coin" << endl;
     cout << "e) Done" << endl;
 
-    add_valid_action('a');
-    add_valid_action('b');
-    add_valid_action('c');
-    add_valid_action('d');
-    add_valid_action('e');
+    add_valid_action("a");
+    add_valid_action("b");
+    add_valid_action("c");
+    add_valid_action("d");
+    add_valid_action("e");
 
 }
 
-bool MenuUS::do_action(char select) {
+bool MenuUS::do_action(string select) {
 
     bool ret = Menu::do_action(select);
     if (ret) return ret;
 
-    ret = true;
+    ret = false;
     if (menuState == addCoin) {
-        switch (select) {
-            case 'a': //nickle
-                queue_event(coinEvent, 5);
-                break;
-            case 'b': //dime
-                queue_event(coinEvent, 10);
-                break;
-            case 'c': //quarter
-                queue_event(coinEvent, 25);
-                break;
-            case 'd': //dollar coin
-                queue_event(coinEvent, 100);
-                break;
-            case 'e': //done
-                cout << "setting menu state " << endl;
-                menuState = mainMenu;
-                break;
-            default:
-                ret = false;
-                break;
+        if (select == "a") { //nickle
+            queue_event(coinEvent, 5);
+            ret = true;
+        }
+        if (select == "b") { //dime
+            queue_event(coinEvent, 10);
+            ret = true;
+        }
+        if (select == "c") { //quarter
+            queue_event(coinEvent, 25);
+            ret = true;
+        }
+        if (select == "d") { //dollar coin
+            queue_event(coinEvent, 100);
+            ret = true;
+        }
+        if (select == "e") { //done
+            cout << "setting menu state " << endl;
+            menuState = mainMenu;
+            ret = true;
         }
     }
+
+    if (menuState == selectItem) {
+        //this menu object does not understand
+        //vending machine inventory nor should it.
+        //Send a message to vending machine to handle it.
+        queue_event(itemSelectEvent, 0, 0, select);
+        menuState = mainMenu;
+        ret = true;
+    }
+
     return ret;
 }
 
@@ -173,47 +222,53 @@ void MenuUK::show_coin_menu() {
     cout << "e) Pound coin" << endl;
     cout << "f) Done" <<endl;
 
-    add_valid_action('a');
-    add_valid_action('b');
-    add_valid_action('c');
-    add_valid_action('d');
-    add_valid_action('e');
-    add_valid_action('f');
+    add_valid_action("a");
+    add_valid_action("b");
+    add_valid_action("c");
+    add_valid_action("d");
+    add_valid_action("e");
+    add_valid_action("f");
 
 }
 
-bool MenuUK::do_action(char select) {
+bool MenuUK::do_action(string select) {
     bool ret = Menu::do_action(select);
     if (ret) return ret;
 
     //coinXMenuEvent can be decoded for denomination from locale context
-    ret = true;
+    ret = false;
     if (menuState == addCoin) {
-        switch (select) {
-            case 'a': // 5pence
-                queue_event(coinEvent, 5);
-                break;
-            case 'b': // 10pence
-                queue_event(coinEvent, 10);
-                break;
-            case 'c': // 20pence
-                queue_event(coinEvent, 20);
-                break;
-            case 'd': // 50pence
-                queue_event(coinEvent, 50);
-                break;
-            case 'e': // pound coin
-                queue_event(coinEvent, 100);
-                break;
-            case 'f': //done
-                menuState = mainMenu;
-                break;
-            default:
-                ret = false;
-                break;
+        if (select == "a") { // 5pence
+            queue_event(coinEvent, 5);
+            ret = true;
+        }
+        if (select == "b") { // 10pence
+            queue_event(coinEvent, 10);
+            ret = true;
+        }
+        if (select == "c") { // 20pence
+            queue_event(coinEvent, 20);
+            ret = true;
+        }
+        if (select == "d") { // 50pence
+            queue_event(coinEvent, 50);
+            ret = true;
+        }
+        if (select == "e") { // pound coin
+            queue_event(coinEvent, 100);
+            ret = true;
+        }
+        if (select == "f") { // done
+            menuState = mainMenu;
+            ret = true;
         }
     }
 
+    if (menuState == selectItem) {
+        queue_event(itemSelectEvent, 0, 0, select);
+        menuState = mainMenu;
+        ret = true;
+    }
     return ret;
 }
 

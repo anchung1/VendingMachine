@@ -61,6 +61,43 @@ bool Coins::has_fat_coin() {
     return operate_by_denomination(fat_coin_value, coinQuery);
 }
 
+list<int> Coins::make_change(int amount) {
+    list<int> change = {};
+    int tally = amount;
+
+    //this is not full-proof
+    //concept is to keep subtracting biggest denomination
+    //available to the running tally.
+    for(auto it = coins.end() - 1; it >= coins.begin(); it--) {
+        if (!it->quantity) continue;
+
+        int denomination = it->denomination;
+        while(tally >= denomination) {
+            if (it->quantity == 0) break;
+            tally -= denomination;
+            it->quantity--;
+            change.push_back(denomination);
+        }
+    }
+
+    //this means that exact change was not found
+    if (tally > 0) {
+        cout << "Unable to make exact change" <<endl;
+        //revert everything
+        while ( !change.empty() ) {
+            int front = change.front();
+            change.pop_front();
+            insertCoin(front);
+        }
+        //return an empty list
+    }
+    return change;
+}
+
+const vector<coin>& Coins::get_data() {
+    return coins;
+}
+
 void CoinsUS::populate_coins() {
     coins.push_back({"Nickle", 5, 0});
     coins.push_back({"Dime", 10, 0});
@@ -79,12 +116,17 @@ void CoinsUK::populate_coins() {
 }
 
 
-CoinsUS coinsUS = CoinsUS();
-CoinsUK coinsUK = CoinsUK();
+CoinsUS *coinsUS = new CoinsUS();
+CoinsUK *coinsUK = new CoinsUK();
 Coins *get_coins(string locale) {
     if (locale.compare("UK") == 0) {
-        return (Coins*)&coinsUK;
+        return (Coins*)coinsUK;
     }
-    return (Coins*)&coinsUS;
+    return (Coins*)coinsUS;
+}
+
+void clean_up_coins() {
+    delete coinsUS;
+    delete coinsUK;
 }
 

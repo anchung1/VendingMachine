@@ -18,6 +18,9 @@ void Simulation::set_localization(string symbol) {
 
     cout << "Using locale: " << locale << endl;
     this->locale = locale;
+    if (locale == "US") coin_unit = "cents";
+    if (locale == "UK") coin_unit = "pence";
+
     menu = get_menu(locale);
     vendingMachine = new VendingMachine(locale);
 }
@@ -38,22 +41,61 @@ void Simulation::process_input_queue() {
         vendingMachine->cancel_purchase();
     }
 
+    if (front.type == itemDataRequestEvent) {
+        vendingMachine->get_item_data();
+    }
+
+    if (front.type == itemSelectEvent) {
+        vendingMachine->select_item(front.s_data1);
+    }
+
+    if (front.type == sendCurrencyReport) {
+        vendingMachine->send_currency_report();
+    }
+    if (front.type == sendItemsReport) {
+        vendingMachine->send_items_report();
+    }
     event_input_queue.pop();
 }
 
 void Simulation::process_output_queue() {
     string msg;
 
+    //no output device, so we'll simulate that here
     while ( !event_output_queue.empty() ) {
         EventData front = event_output_queue.front();
-        msg = translate_event(front);
-        cout << "Output Event to devices: " << msg << endl;
+        if (front.type == itemDataReportEvent) {
+            cout << "#: " << front.s_data1 << " " << front.s_data2 << " "
+                 << to_string(front.data) << coin_unit << endl;
+        }
+        if (front.type == coinEvent) {
+            cout << "cash in: " << front.data << coin_unit << endl;
+        }
+        if (front.type == ejectCoinEvent) {
+            cout << "ejecting: " << front.data << coin_unit << endl;
+        }
+        if (front.type == showFundsEvent) {
+            cout << endl << "total credit: " << front.data << endl;
+        }
+        if (front.type == itemDispenseEvent) {
+            cout << "DISPENSING ITEM: " << front.s_data2 << " from " << front.s_data1 << endl;
+        }
+        if (front.type == sendCurrencyReport) {
+            //name, denomination, quantity
+            cout << "Currency Report: " << front.s_data1 << " " << front.data << " " << front.data2 << endl;
+        }
+        if (front.type == sendItemsReport) {
+            //keyID, name, cost, quantity
+            cout << "Item Report: " << front.s_data1 << " " << front.s_data2 << " " << front.data << " " << front.data2 << endl;
+        }
         event_output_queue.pop();
     }
 }
 
 void Simulation::preconfigure_vending_machine() {
-    vendingMachine->stock_coins();
+    vendingMachine->stock_coins(1);
+    vendingMachine->stock_items();
+
 }
 
 void Simulation::simulate() {
